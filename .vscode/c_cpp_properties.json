@@ -4,7 +4,7 @@
             "name": "目标 1",
             "includePath": [
                 "D:\\software\\keil\\C51\\INC",
-                "e:\\Project\\51小车\\超声波避障（LCD1602显示）HL-1"
+                "e:\\Project\\51小车\\蓝牙版本"
             ],
             "defines": [
                 "__C51__",

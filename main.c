@@ -91,6 +91,125 @@ void Count(void); // 距离计算函数
 unsigned long S = 0; // 用于存放距离的值
 bit flag = 0;		 // 量程溢出标志位
 
+#define left 'C'
+#define right 'D'
+#define up 'A'
+#define down 'B'
+#define stop 'F'
+
+char code str[] = "收到指令，向前!\n";
+char code str1[] = "收到指令，向后!\n";
+char code str2[] = "收到指令，向左!\n";
+char code str3[] = "收到指令，向右!\n";
+char code str4[] = "收到指令，停止!\n";
+
+bit flag_REC = 0;
+bit flag1 = 0;
+int flage2 = 0;
+
+unsigned char i = 0;
+unsigned char dat = 0;
+unsigned char buff[5] = 0; // 接收缓冲字节
+void Timer_Count(void);
+
+/************************************************************************/
+// 字符串发送函数
+void send_str()
+// 传送字串
+{
+	unsigned char i = 0;
+	while (str[i] != '\0')
+	{
+		SBUF = str[i];
+		while (!TI)
+			;	// 等特数据传送
+		TI = 0; // 清除数据传送标志
+		i++;	// 下一个字符
+	}
+}
+
+void send_str1()
+// 传送字串
+{
+	unsigned char i = 0;
+	while (str1[i] != '\0')
+	{
+		SBUF = str1[i];
+		while (!TI)
+			;	// 等特数据传送
+		TI = 0; // 清除数据传送标志
+		i++;	// 下一个字符
+	}
+}
+
+void send_str2()
+// 传送字串
+{
+	unsigned char i = 0;
+	while (str2[i] != '\0')
+	{
+		SBUF = str2[i];
+		while (!TI)
+			;	// 等特数据传送
+		TI = 0; // 清除数据传送标志
+		i++;	// 下一个字符
+	}
+}
+
+void send_str3()
+// 传送字串
+{
+	unsigned char i = 0;
+	while (str3[i] != '\0')
+	{
+		SBUF = str3[i];
+		while (!TI)
+			;	// 等特数据传送
+		TI = 0; // 清除数据传送标志
+		i++;	// 下一个字符
+	}
+}
+
+void send_str4()
+// 传送字串
+{
+	unsigned char i = 0;
+	while (str4[i] != '\0')
+	{
+		SBUF = str4[i];
+		while (!TI)
+			;	// 等特数据传送
+		TI = 0; // 清除数据传送标志
+		i++;	// 下一个字符
+	}
+}
+
+void sint() interrupt 4 // 中断接收3个字节
+{
+
+	if (RI) // 是否接收中断
+	{
+		RI = 0;
+		dat = SBUF;
+		if (dat == 'O' && (i == 0)) // 接收数据第一帧
+		{
+			buff[i] = dat;
+			flag1 = 1; // 开始接收数据
+		}
+		else if (flag1 == 1)
+		{
+			i++;
+			buff[i] = dat;
+			if (i >= 2)
+			{
+				i = 0;
+				flag1 = 0;
+				flag_REC = 1;
+			} // 停止接收
+		}
+	}
+}
+
 //=========================================================================================================================
 /********距离计算程序***************/
 void Conut(void)
@@ -101,35 +220,48 @@ void Conut(void)
 	// 0.00034米/1000=0.34毫米  也就是1us能走0.34毫米
 	// 但是，我们现在计算的是从超声波发射到反射接收的双路程，
 	// 所以我们将计算的结果除以2才是实际的路程
-	S = time ; // 先算出一共的时间是多少微秒。
+	S = time;	  // 先算出一共的时间是多少微秒。
 	S = S * 0.17; // 此时计算到的结果为毫米，并且是精确到毫米的后两位了，有两个小数点
-				//0.17=3.4/2
+				  // 0.17=3.4/2
 	//=======================================
-	if ((S >= 5000) || flag == 1) // 超出测量范围
-	{
+	if ((S >= 5000) ) // 超出测量范围
+	{BUZZ = 0; //
+						Delay1ms(50);
+						BUZZ = 1;
 		flag = 0;
-		DisplayListChar(0, 1, table1);
 	}
 	else
 	{
-		disbuff[0] = S % 10;
-		disbuff[1] = S / 10 % 10;
-		disbuff[2] = S / 100 % 10;
-		disbuff[3] = S / 1000;
-		DisplayListChar(0, 1, table);
-		DisplayOneChar(9, 1, ASCII[disbuff[3]]);
-		DisplayOneChar(10, 1, ASCII[disbuff[2]]);
-		DisplayOneChar(11, 1, ASCII[disbuff[1]]);
-		DisplayOneChar(12, 1, ASCII[10]);
-		DisplayOneChar(13, 1, ASCII[disbuff[0]]);
+		if (S == 0)
+		{
+
+			DisplayListChar(0, 1, table1);
+		}
+
+		else
+		{
+
+			disbuff[0] = S % 10;
+			disbuff[1] = S / 10 % 10;
+			disbuff[2] = S / 100 % 10;
+			disbuff[3] = S / 1000;
+			DisplayListChar(0, 1, table);
+			DisplayOneChar(9, 1, ASCII[disbuff[3]]);
+			DisplayOneChar(10, 1, ASCII[disbuff[2]]);
+			DisplayOneChar(11, 1, ASCII[disbuff[1]]);
+			DisplayOneChar(12, 1, ASCII[10]);
+			DisplayOneChar(13, 1, ASCII[disbuff[0]]);
+		}
 	}
 }
 
 /********************************************************/
-void zd0() interrupt 3 // T0中断用来计数器溢出,超过测距范围
+void zd0() interrupt 3 // T0中断用来计数器溢出,超过测距范围`
 {
-	flag = 1; // 中断溢出标志
-	RX = 0;
+	if (flage2 == 2)
+	{		
+		
+	}
 }
 
 /********超声波高电平脉冲宽度计算程序***************/
@@ -144,6 +276,7 @@ void Timer_Count(void)
 /********************************************************/
 void StartModule() // 启动模块
 {
+
 	TX = 1; // 启动一次模块
 	Delay10us(2);
 	TX = 0;
@@ -153,7 +286,6 @@ void StartModule() // 启动模块
 /*************主程序********************/
 void main(void)
 {
-	unsigned char i;
 	unsigned int a;
 	// cmg88();//关数码管
 	Delay1ms(400); // 启动等待，等LCM讲入工作状态
@@ -166,79 +298,90 @@ void main(void)
 	//===============================
 	// PWM_ini();
 	//===============================
-
+	TMOD = 0x20;
+	TH1 = 0xFd; // 11.0592M晶振，9600波特率
+	TL1 = 0xFd;
+	SCON = 0x50;
+	PCON = 0x00;
+	TR1 = 1;
+	ES = 1;
+	EA = 1;
 	//=================================
-B:
-	for (i = 0; i < 50; i++) // 判断K4是否按下
-	{
-		Delay1ms(1);   // 1ms内判断50次，如果其中有一次被判断到K4(S4)没按下，便重新检测
-		if (P3_7 != 0) // 当K4（S4）按下时，启动小车
-			goto B;	   // 跳转到标号B，重新检测
-	}
-	// 蜂鸣器响一声
-	BUZZ = 0; // 50次检测K4(S4)确认是按下之后，蜂鸣器发出“滴”声响，然后启动小车。
-	Delay1ms(50);
-	BUZZ = 1;			// 响50ms后关闭蜂鸣器
-	TMOD = TMOD | 0x10; // 设T0为方式1，GATE=1；
-	EA = 1;				// 开启总中断
-	TH1 = 0;
-	TL1 = 0;
-	ET1 = 1; // 允许T0中断
 
-	TH0 = 0XFc; // 1ms定时
-	TL0 = 0X18;
-	TR0 = 1;
-	ET0 = 1;
+A:
+	if (flage2 == 1)
+	{			  // 蜂鸣器响一声
+		BUZZ = 0; //
+		Delay1ms(50);
+		BUZZ = 1;			// 响50ms后关闭蜂鸣器
+		TMOD  = 0x10; // 设T0为方式1，GATE=1；
+		EA = 1;				// 开启总中断
+		TH1 = 0;
+		TL1 = 0;
+		ET1 = 1; // 允许T0中断
+
+		TH0 = 0XFc; // 1ms定时
+		TL0 = 0X18;
+		TR0 = 1;
+		ET0 = 1;
+		flage2 = 2;
+		while (flage2 == 2)
+		{
+
+			if (Left_1_led == 0 && Right_1_led == 0)
+			{
+				run(); // 调用前进函数
+			}
+			if (Right_2_led == 0 && Left_2_led == 0) // 避障两边传感器同时检测到红外
+			{
+				stoprun(); // 调用电机停止函数
+				RX = 1;
+				StartModule(); // 启动模块
+
+				for (a = 951; a > 0; a--)
+				{
+
+					if (RX == 1)
+					{
+						Timer_Count(); // 超声波高电平脉冲宽度计算函数
+					}
+				}
+				delay(100);	
+				
+			}
+			else
+			{
+				if (Left_1_led == 1 && Right_1_led == 0) // 左边检测到黑线
+				{
+					leftrun(); // 调用小车左转  函数
+					run();
+				}
+
+				if (Right_1_led == 1 && Left_1_led == 0) // 右边检测到黑线
+				{
+					rightrun();
+					run();
+				}
+			}
+		}
+	}
 
 	//=======================================================================================================================
-	while (1)
+	while (flage2 != 1)
 	{
 
-		// 有信号为0  没有信号为1
-
-		if (Left_1_led == 0 && Right_1_led == 0)
+		if (flag_REC == 1)
 		{
-			run(); // 调用前进函数
-		}
-		if (Right_2_led == 0 && Left_2_led == 0) // 避障两边传感器同时检测到红外
-		{
-			stoprun(); // 调用电机停止函数
-			RX = 1;
-			StartModule(); // 启动模块
-
-			for (a = 951; a > 0; a--)
-			{
-
-				if (RX == 1)
+			flag_REC = 0;
+			if (buff[0] == 'O' && buff[1] == 'N') // 第一个字节为O，第二个字节为N，第三个字节为控制码
+				switch (buff[2])
 				{
-					Timer_Count(); // 超声波高电平脉冲宽度计算函数
+				case up: // 前进
+					flage2 = 1;
+					goto A;
+					break;
 				}
-			}
-			delay(1000); 
-			for (a = 951; a > 0; a--)
-			{
-
-				if (RX == 1)
-				{
-					Timer_Count(); // 超声波高电平脉冲宽度计算函数
-				}
-			}
-			delay(1000); 
-			return;
-		}
-		else
-		{
-			if (Left_1_led == 1 && Right_1_led == 0) // 左边检测到黑线
-			{
-				leftrun(); // 调用小车左转  函数
-				run();
-			}
-
-			if (Right_1_led == 1 && Left_1_led == 0) // 右边检测到黑线
-			{
-				rightrun();
-				run();
-			}
 		}
 	}
+	// 有信号为0  没有信号为1
 }

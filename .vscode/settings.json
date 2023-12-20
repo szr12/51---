@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "hj-4wd_pwm.h": "c",
-        "HJ-4WD_PWM.H": "cpp"
-    }
+        "HJ-4WD_PWM.H": "cpp",
+        "lcd1602display.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }
